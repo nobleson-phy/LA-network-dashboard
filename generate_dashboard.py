@@ -521,6 +521,17 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f5f6f
 .complexity-low{background:#C8E6C9}
 .complexity-medium{background:#FFE0B2}
 .complexity-high{background:#FFCDD2}
+.collapsible-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.collapsible-header:hover{color:#4a90d9}
+.collapsible-arrow{font-size:10px;transition:transform .2s}
+.collapsible-arrow.collapsed{transform:rotate(-90deg)}
+.dist-channel{margin-bottom:10px}
+.dist-channel-label{font-size:11px;font-weight:600;color:#555;margin-bottom:3px;border-bottom:1px solid #eee;padding-bottom:2px}
+.dist-stats{display:flex;gap:6px;flex-wrap:wrap;font-size:11px;margin-bottom:4px}
+.dist-stat{color:#666}
+.dist-stat span{font-weight:600;color:#333}
+.dist-sparkline{width:100%;height:32px;display:block}
+.dist-empty{color:#999;font-size:12px;font-style:italic}
 </style>
 </head>
 <body>
@@ -597,6 +608,30 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f5f6f
       <div style="height:8px"></div>
       <div class="stat-row"><span class="stat-label">Complexity Score</span><span class="stat-value" id="statComplexity">-</span></div>
       <div class="stat-row"><span class="stat-label">Group</span><span class="stat-value" id="statGroup" style="display:flex;align-items:center;gap:6px">-</span></div>
+    </div>
+
+    <div class="section" id="graphMetricsSection">
+      <h3 class="collapsible-header" onclick="toggleCollapsible('graphMetricsBody','graphMetricsArrow')">
+        Graph Metrics (precomputed)
+        <span class="collapsible-arrow" id="graphMetricsArrow">&#9660;</span>
+      </h3>
+      <div id="graphMetricsBody">
+        <div class="stat-row"><span class="stat-label">Density</span><span class="stat-value" id="gmDensity">-</span></div>
+        <div class="stat-row"><span class="stat-label">Components</span><span class="stat-value" id="gmComponents">-</span></div>
+        <div class="stat-row"><span class="stat-label">Diameter</span><span class="stat-value" id="gmDiameter">-</span></div>
+        <div class="stat-row"><span class="stat-label">Avg Clustering</span><span class="stat-value" id="gmClustering">-</span></div>
+        <div class="stat-row"><span class="stat-label">Avg Degree</span><span class="stat-value" id="gmAvgDegree">-</span></div>
+      </div>
+    </div>
+
+    <div class="section" id="edgeDistSection">
+      <h3 class="collapsible-header" onclick="toggleCollapsible('edgeDistBody','edgeDistArrow')">
+        Edge Distribution (filtered)
+        <span class="collapsible-arrow" id="edgeDistArrow">&#9660;</span>
+      </h3>
+      <div id="edgeDistBody">
+        <div id="edgeDistContent"><span class="dist-empty">Load a graph to see distribution.</span></div>
+      </div>
     </div>
 
     <div class="section" id="detailSection">
