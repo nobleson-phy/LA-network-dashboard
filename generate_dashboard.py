@@ -454,8 +454,27 @@ def compute_all_graph_data(df, user_ids, master_pos, all_panel_titles, panel_cla
                         "is_outside_edge": is_outside_edge,
                     })
 
+                # Build NetworkX subgraph from active nodes/edges for metric computation
+                G_active = nx.Graph()
+                G_active.add_nodes_from(filtered_ts.keys())
+                for ek in filtered_ef:
+                    G_active.add_edge(ek[0], ek[1])
+
+                graph_metrics = compute_graph_metrics(G_active)
+                node_metrics = compute_node_metrics(G_active)
+
+                # Merge node metrics into node dicts
+                zero_metrics = {
+                    "degree": 0,
+                    "betweenness_centrality": 0.0,
+                    "closeness_centrality": 0.0,
+                    "clustering": 0.0,
+                }
+                for node_dict in nodes:
+                    node_dict.update(node_metrics.get(node_dict["id"], zero_metrics))
+
                 key = f"{uid}|{task_id}|{mod}"
-                all_graphs[key] = {"nodes": nodes, "edges": edges}
+                all_graphs[key] = {"nodes": nodes, "edges": edges, "graph_metrics": graph_metrics}
 
                 # Track available modalities
                 task_key = f"{uid}|{task_id}"
