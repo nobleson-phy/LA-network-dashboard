@@ -658,6 +658,102 @@ var allComplexityScores = {};  // Store all user scores for grouping
 var groupThresholds = { low: 0, med: 0 };  // Tertile thresholds
 var currentRawData = null;  // Store raw unfiltered data
 
+// ---- Collapsible sections ----
+function toggleCollapsible(bodyId, arrowId){
+  var body = document.getElementById(bodyId);
+  var arrow = document.getElementById(arrowId);
+  var isHidden = body.style.display === 'none';
+  body.style.display = isHidden ? '' : 'none';
+  arrow.classList.toggle('collapsed', !isHidden);
+}
+
+// ---- Graph metrics display ----
+function renderGraphMetrics(gm){
+  if(!gm){ return; }
+  document.getElementById('gmDensity').textContent    = gm.density;
+  document.getElementById('gmComponents').textContent = gm.num_components;
+  document.getElementById('gmDiameter').textContent   = gm.diameter === -1 ? 'N/A' : gm.diameter;
+  document.getElementById('gmClustering').textContent = gm.avg_clustering;
+  document.getElementById('gmAvgDegree').textContent  = gm.avg_degree;
+}
+
+function clearGraphMetrics(){
+  ['gmDensity','gmComponents','gmDiameter','gmClustering','gmAvgDegree'].forEach(function(id){
+    document.getElementById(id).textContent = '-';
+  });
+}
+
+// ---- Edge distribution helpers ----
+function computeDistribution(values, numBins){
+  if(values.length === 0){ return []; }
+  var mn = Math.min.apply(null, values);
+  var mx = Math.max.apply(null, values);
+  var bins = new Array(numBins).fill(0);
+  if(mn === mx){ bins[0] = values.length; return bins; }
+  values.forEach(function(v){
+    var idx = Math.min(Math.floor((v - mn) / (mx - mn) * numBins), numBins - 1);
+    bins[idx]++;
+  });
+  return bins;
+}
+
+function renderSparkline(binCounts){
+  if(binCounts.length === 0){ return ''; }
+  var maxCount = Math.max.apply(null, binCounts);
+  var w = 100 / binCounts.length;
+  var bars = binCounts.map(function(c, i){
+    var h = maxCount > 0 ? (c / maxCount) * 28 : 0;
+    var y = 30 - h;
+    return '<rect x="' + (i * w + 0.5).toFixed(1) + '" y="' + y.toFixed(1) +
+           '" width="' + (w - 1).toFixed(1) + '" height="' + h.toFixed(1) +
+           '" fill="#4a90d9" rx="1"/>';
+  }).join('');
+  return '<svg class="dist-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">' + bars + '</svg>';
+}
+
+function computeSummaryStats(values){
+  if(values.length === 0){ return null; }
+  var sorted = values.slice().sort(function(a, b){ return a - b; });
+  var sum = sorted.reduce(function(a, b){ return a + b; }, 0);
+  var mid = Math.floor(sorted.length / 2);
+  var median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  return { min: sorted[0], max: sorted[sorted.length - 1], mean: sum / sorted.length, median: median };
+}
+
+function renderDistChannel(label, values, unit){
+  var u = unit || '';
+  var stats = computeSummaryStats(values);
+  if(!stats){
+    return '<div class="dist-channel"><div class="dist-channel-label">' + label +
+           '</div><span class="dist-empty">No data</span></div>';
+  }
+  var bins = computeDistribution(values, 8);
+  return '<div class="dist-channel">' +
+    '<div class="dist-channel-label">' + label + '</div>' +
+    '<div class="dist-stats">' +
+      '<span class="dist-stat">Min <span>' + stats.min.toFixed(1) + u + '</span></span>' +
+      '<span class="dist-stat">Max <span>' + stats.max.toFixed(1) + u + '</span></span>' +
+      '<span class="dist-stat">Mean <span>' + stats.mean.toFixed(1) + u + '</span></span>' +
+      '<span class="dist-stat">Median <span>' + stats.median.toFixed(1) + u + '</span></span>' +
+    '</div>' +
+    renderSparkline(bins) +
+  '</div>';
+}
+
+function updateDistributionSection(edges){
+  var container = document.getElementById('edgeDistContent');
+  if(!edges || edges.length === 0){
+    container.innerHTML = '<span class="dist-empty">No edges visible.</span>';
+    return;
+  }
+  var freqs  = edges.map(function(e){ return e.frequency || 0; });
+  var times  = edges.map(function(e){
+    return e.time_weight !== undefined ? e.time_weight : (e.timeWeight || 0);
+  });
+  container.innerHTML = renderDistChannel('Frequency', freqs, '') +
+                        renderDistChannel('Time Weight', times, 's');
+}
+
 // ---- Complexity calculation ----
 function calculateComplexityScore(activeNodes, edgeCount){
   return activeNodes + edgeCount;
