@@ -235,6 +235,66 @@ def classify_panel(panel):
     return "other"
 
 
+# ---------------------------------------------------------------------------
+# Network metric helpers
+# ---------------------------------------------------------------------------
+
+def compute_graph_metrics(G):
+    """Compute structural metrics for a NetworkX graph. Safe for empty graphs."""
+    if G.number_of_nodes() == 0:
+        return {
+            "density": 0.0,
+            "num_components": 0,
+            "diameter": -1,
+            "avg_clustering": 0.0,
+            "avg_degree": 0.0,
+        }
+
+    components = list(nx.connected_components(G))
+    num_components = len(components)
+
+    if G.number_of_nodes() > 1:
+        largest = max(components, key=len)
+        sub = G.subgraph(largest)
+        try:
+            diameter = nx.diameter(sub)
+        except nx.NetworkXError:
+            diameter = -1
+    else:
+        diameter = -1
+
+    degrees = [d for _, d in G.degree()]
+    avg_degree = sum(degrees) / len(degrees) if degrees else 0.0
+
+    return {
+        "density": round(nx.density(G), 4),
+        "num_components": num_components,
+        "diameter": diameter,
+        "avg_clustering": round(nx.average_clustering(G), 4),
+        "avg_degree": round(avg_degree, 2),
+    }
+
+
+def compute_node_metrics(G):
+    """Compute per-node metrics for a NetworkX graph. Returns dict keyed by node id."""
+    if G.number_of_nodes() == 0:
+        return {}
+
+    betweenness = nx.betweenness_centrality(G)
+    closeness = nx.closeness_centrality(G)
+    clustering = nx.clustering(G)
+
+    return {
+        node: {
+            "degree": G.degree(node),
+            "betweenness_centrality": round(betweenness[node], 4),
+            "closeness_centrality": round(closeness[node], 4),
+            "clustering": round(clustering[node], 4),
+        }
+        for node in G.nodes()
+    }
+
+
 def create_master_layout(df_all):
     """Circular layout with outside at 12 o'clock, text at 6."""
     all_panels = sorted(df_all["Panel_Title"].dropna().unique())
