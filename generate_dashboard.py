@@ -932,6 +932,9 @@ function applyFilters(){
   cy.elements('edge[isOutsideEdge = true]').forEach(function(edge){
     if(!showOutside) edge.hide(); else edge.show();
   });
+
+  // Refresh edge distribution for currently visible edges
+  updateDistributionSection(filteredEdges);
 }
 
 document.getElementById('selUser').addEventListener('change', populateTasks);
@@ -1139,7 +1142,12 @@ function loadGraph(){
       'Classification: ' + d.classification + '<br>' +
       'Active: ' + (d.active ? 'Yes' : 'No') + '<br>' +
       'Time spent: ' + d.time_spent + 's<br>' +
-      'Connected edges: ' + connEdges.length;
+      'Connected edges: ' + connEdges.length +
+      '<br><br><b>Node Metrics</b><br>' +
+      'Degree: ' + (d.node_degree || 0) + '<br>' +
+      'Betweenness: ' + (d.node_betweenness || 0).toFixed(3) + '<br>' +
+      'Closeness: ' + (d.node_closeness || 0).toFixed(3) + '<br>' +
+      'Clustering: ' + (d.node_clustering || 0).toFixed(3);
   });
 
   // ---- Click edge -> show detail ----
@@ -1172,7 +1180,8 @@ function loadGraph(){
     var d = evt.target.data();
     tooltip.innerHTML = '<b>' + d.id + '</b><br>Class: ' + d.classification +
       '<br>Active: ' + (d.active ? 'Yes' : 'No') +
-      '<br>Time: ' + d.time_spent + 's';
+      '<br>Time: ' + d.time_spent + 's&nbsp;&nbsp;|&nbsp;&nbsp;Degree: ' + (d.node_degree || 0) +
+      '<br>Betweenness: ' + (d.node_betweenness || 0).toFixed(3);
     tooltip.style.display = 'block';
   });
 
