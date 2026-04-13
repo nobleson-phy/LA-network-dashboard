@@ -966,6 +966,8 @@ function loadGraph(){
     document.getElementById('statTrans').textContent = '-';
     document.getElementById('statComplexity').textContent = '-';
     document.getElementById('statGroup').textContent = '-';
+    clearGraphMetrics();
+    document.getElementById('edgeDistContent').innerHTML = '<span class="dist-empty">No data for this combination.</span>';
     document.getElementById('detailContent').textContent = 'No data for this combination.';
     return;
   }
@@ -985,7 +987,11 @@ function loadGraph(){
         borderColor: n.color,
         borderWidth: n.active ? 0 : 2,
         nodeOpacity: n.active ? 1 : 0.5,
-        label: n.id
+        label: n.id,
+        node_degree: n.degree || 0,
+        node_betweenness: n.betweenness_centrality || 0,
+        node_closeness: n.closeness_centrality || 0,
+        node_clustering: n.clustering || 0
       },
       position: { x: n.x, y: n.y }
     });
@@ -1248,6 +1254,8 @@ function loadGraph(){
   document.getElementById('statComplexity').textContent = complexityScore;
   document.getElementById('statGroup').innerHTML = '<div class="complexity-indicator complexity-' + group + '" style="background:#' + groupColors[group] + '"></div>' + groupLabels[group];
   document.getElementById('detailContent').innerHTML = '<span style="color:#999">Click a node or edge for details.</span>';
+  renderGraphMetrics(data.graph_metrics);
+  updateDistributionSection(data.edges);
 }
 
 // ---- Read ?user= query param for deep-linking ----
